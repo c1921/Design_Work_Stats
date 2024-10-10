@@ -24,6 +24,10 @@ def merge_xlsx_to_csv(input_file):
     dfs = []
     for sheet in w_sheets:
         df = pd.read_excel(input_file, sheet_name=sheet)
+        # 添加空行
+        df = pd.concat([df, pd.DataFrame([{}])], ignore_index=True)
+        # 添加标记行
+        df = pd.concat([df, pd.DataFrame([{'时间': f'===={sheet}===='}])], ignore_index=True)
         dfs.append(df)
     
     # 合并所有数据框
@@ -40,7 +44,7 @@ def merge_xlsx_to_csv(input_file):
     
     print(f"已处理文件 {input_file}")
     print(f"已合并以下工作表: {', '.join(w_sheets)}")
-    print(f"结果已导出为 {output_file}，并删除了前两行")
+    print(f"结果已导出为 {output_file}，并删除了前两行，添加了工作表分隔标记")
     print("------------------------")
 
 def process_all_xlsx():
