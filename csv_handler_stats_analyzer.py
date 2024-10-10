@@ -1,16 +1,17 @@
 import csv
 from collections import defaultdict
 import glob
+import os
 
 # 初始化一个嵌套的defaultdict来存储每个对接人每周的统计数据
 stats = defaultdict(lambda: defaultdict(lambda: {'新': 0, '改': 0, '套': 0, '修': 0, '出差': 0}))
 
-# 获取所有CSV文件
-csv_files = glob.glob('2024.9_W*.csv')
+# 获取output_csv目录下的所有CSV文件
+csv_files = glob.glob(os.path.join('output_csv', '*.csv'))
 
 for file in csv_files:
     # 从文件名中提取周数
-    week = file.split('_W')[1].split('.csv')[0]
+    week = os.path.basename(file).split('_W')[1].split('.csv')[0]
     
     # 读取CSV文件
     with open(file, 'r', encoding='utf-8') as f:
@@ -30,7 +31,7 @@ for file in csv_files:
 print("每个对接人每周的统计数据:")
 for handler, weeks_data in stats.items():
     print(f"\n对接人: {handler}")
-    for week, data in weeks_data.items():
+    for week, data in sorted(weeks_data.items(), key=lambda x: int(x[0])):
         print(f"  第{week}周:")
         for category, count in data.items():
             print(f"    {category}: {count}")
