@@ -6,8 +6,9 @@ import sys
 
 def save_stats_to_file(stats, project_stats, output_file):
     with open(output_file, 'w', encoding='utf-8') as f:
+        f.write("声明：本统计数据仅供参考，不作为正式考核依据。如有疑问，请自行核实。\n\n")
         f.write("每个对接人每周的统计数据:\n")
-        for handler, weeks_data in stats.items():
+        for i, (handler, weeks_data) in enumerate(stats.items()):
             f.write(f"\n对接人: {handler}\n")
             for week, data in sorted(weeks_data.items(), key=lambda x: int(x[0])):
                 f.write(f"  第{week}周:\n")
@@ -18,6 +19,10 @@ def save_stats_to_file(stats, project_stats, output_file):
                 f.write("    项目统计:\n")
                 for project, count in project_stats[handler][week].items():
                     f.write(f"      {project}: {count}\n")
+            
+            # 在每个对接人的数据后添加分割线，除非是最后一个对接人
+            if i < len(stats) - 1:
+                f.write("\n" + "-" * 50 + "\n")
 
 # 初始化一个嵌套的defaultdict来存储每个对接人每周的统计数据
 stats = defaultdict(lambda: defaultdict(lambda: {'新': 0, '改': 0, '套': 0, '修': 0, '出差': 0}))
