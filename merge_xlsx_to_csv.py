@@ -3,10 +3,10 @@ import openpyxl
 import os
 import glob
 
-def merge_xlsx_to_csv(input_file):
+def process_xlsx(input_file):
     # 获取输入文件名（不包括扩展名）
     base_name = os.path.splitext(input_file)[0]
-    output_file = f"{base_name}.csv"
+    merged_output_file = f"{base_name}.csv"
     
     # 读取Excel文件
     workbook = openpyxl.load_workbook(input_file, read_only=True)
@@ -20,31 +20,43 @@ def merge_xlsx_to_csv(input_file):
     # 按数字顺序排序工作表
     w_sheets.sort(key=lambda x: int(x[1:]))
     
-    # 读取并合并工作表
+    # 读取并处理工作表
     dfs = []
     for sheet in w_sheets:
         df = pd.read_excel(input_file, sheet_name=sheet)
-        # 添加空行
+        
+        # 保存单个工作表为CSV并删除前两行
+        single_output_file = f"{base_name}_{sheet}.csv"
+        df.to_csv(single_output_file, index=False, encoding='utf-8-sig')
+        
+        # 删除单个工作表CSV文件的前两行
+        with open(single_output_file, 'r', encoding='utf-8-sig') as f:
+            lines = f.readlines()
+        with open(single_output_file, 'w', encoding='utf-8-sig') as f:
+            f.writelines(lines[2:])
+        
+        print(f"已将工作表 {sheet} 保存为 {single_output_file}，并删除了前两行")
+        
+        # 为合并准备数据
         df = pd.concat([df, pd.DataFrame([{}])], ignore_index=True)
-        # 添加标记行
         df = pd.concat([df, pd.DataFrame([{'时间': f'===={sheet}===='}])], ignore_index=True)
         dfs.append(df)
     
     # 合并所有数据框
     merged_df = pd.concat(dfs, ignore_index=True)
     
-    # 导出为CSV文件
-    merged_df.to_csv(output_file, index=False, encoding='utf-8-sig')
+    # 导出合并后的CSV文件
+    merged_df.to_csv(merged_output_file, index=False, encoding='utf-8-sig')
     
-    # 删除CSV文件的前两行
-    with open(output_file, 'r', encoding='utf-8-sig') as f:
+    # 删除合并CSV文件的前两行
+    with open(merged_output_file, 'r', encoding='utf-8-sig') as f:
         lines = f.readlines()
-    with open(output_file, 'w', encoding='utf-8-sig') as f:
+    with open(merged_output_file, 'w', encoding='utf-8-sig') as f:
         f.writelines(lines[2:])
     
     print(f"已处理文件 {input_file}")
     print(f"已合并以下工作表: {', '.join(w_sheets)}")
-    print(f"结果已导出为 {output_file}，并删除了前两行，添加了工作表分隔标记")
+    print(f"合并结果已导出为 {merged_output_file}，并删除了前两行，添加了工作表分隔标记")
     print("------------------------")
 
 def process_all_xlsx():
@@ -56,7 +68,7 @@ def process_all_xlsx():
         return
     
     for xlsx_file in xlsx_files:
-        merge_xlsx_to_csv(xlsx_file)
+        process_xlsx(xlsx_file)
     
     print(f"共处理了 {len(xlsx_files)} 个xlsx文件。")
 
