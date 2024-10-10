@@ -1,7 +1,7 @@
 import pandas as pd
 import openpyxl
 import os
-import glob
+import sys
 
 def process_xlsx(input_file, output_folder):
     # 获取输入文件名（不包括扩展名）
@@ -39,24 +39,24 @@ def process_xlsx(input_file, output_folder):
     print(f"已处理以下工作表: {', '.join(w_sheets)}")
     print("------------------------")
 
-def process_all_xlsx():
+def process_all_xlsx(input_file):
     # 创建输出文件夹
     output_folder = 'output_csv'
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
     
-    # 获取当前目录下所有的xlsx文件
-    xlsx_files = glob.glob("*.xlsx")
-    
-    if not xlsx_files:
-        print("当前目录下没有找到xlsx文件。")
+    if not os.path.exists(input_file):
+        print(f"找不到指定的Excel文件：{input_file}")
         return
     
-    for xlsx_file in xlsx_files:
-        process_xlsx(xlsx_file, output_folder)
+    process_xlsx(input_file, output_folder)
     
-    print(f"共处理了 {len(xlsx_files)} 个xlsx文件。")
+    print(f"已处理Excel文件：{input_file}")
     print(f"所有CSV文件已保存到 {os.path.abspath(output_folder)} 文件夹中。")
 
 if __name__ == "__main__":
-    process_all_xlsx()
+    if len(sys.argv) < 2:
+        print("请提供Excel文件的路径作为参数。")
+    else:
+        input_file = sys.argv[1]
+        process_all_xlsx(input_file)
