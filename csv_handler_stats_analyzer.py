@@ -46,13 +46,16 @@ for file in csv_files:
             handler = row['对接人']
             project = row['项目']
             
-            # 统计各项数据
-            for category in ['新', '改', '套', '修', '出差']:
-                value = row.get(category, '0')
-                if value.isdigit():
-                    stats[handler][week][category] += int(value)
+            # 检查进度是否为1
+            progress = row.get('进度', '1')
+            if progress == '1':
+                # 统计各项数据
+                for category in ['新', '改', '套', '修', '出差']:
+                    value = row.get(category, '0')
+                    if value.isdigit():
+                        stats[handler][week][category] += int(value)
             
-            # 统计项目
+            # 无论进度如何，都计入项目统计
             project_stats[handler][week][project] += 1
 
 # 获取Excel文件名作为前缀
