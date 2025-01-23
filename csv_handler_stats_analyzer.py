@@ -25,7 +25,7 @@ def save_stats_to_file(stats, project_stats, output_file):
                 f.write("\n" + "-" * 50 + "\n")
 
 # 初始化一个嵌套的defaultdict来存储每个对接人每周的统计数据
-stats = defaultdict(lambda: defaultdict(lambda: {'新': 0, '改': 0, '套': 0, '修': 0, '出差': 0}))
+stats = defaultdict(lambda: defaultdict(lambda: {'新 / 拍': 0, '套 / 剪': 0, '改 / 追': 0, '出差': 0}))
 
 # 初始化一个嵌套的defaultdict来存储每个对接人每周的项目统计
 project_stats = defaultdict(lambda: defaultdict(lambda: defaultdict(int)))
@@ -50,7 +50,7 @@ for file in csv_files:
             progress = row.get('进度', '1')
             if progress == '1':
                 # 统计各项数据
-                for category in ['新', '改', '套', '修', '出差']:
+                for category in ['新 / 拍', '套 / 剪', '改 / 追', '出差']:
                     value = row.get(category, '0')
                     if value.isdigit():
                         stats[handler][week][category] += int(value)
