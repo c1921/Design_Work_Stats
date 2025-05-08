@@ -4,9 +4,10 @@ import glob
 import os
 import sys
 
-def save_stats_to_file(stats, project_stats, output_file):
+def save_stats_to_file(stats, project_stats, company_stats, output_file):
     with open(output_file, 'w', encoding='utf-8') as f:
         f.write("声明：本统计数据仅供参考，不作为正式考核依据。如有疑问，请自行核实。\n\n")
+        
         f.write("每个对接人每周的统计数据:\n")
         for i, (handler, weeks_data) in enumerate(stats.items()):
             f.write(f"\n对接人: {handler}\n")
@@ -19,6 +20,11 @@ def save_stats_to_file(stats, project_stats, output_file):
                 f.write("    项目统计:\n")
                 for project, count in project_stats[handler][week].items():
                     f.write(f"      {project}: {count}\n")
+                
+                # 添加公司统计
+                f.write("    公司统计:\n")
+                for company, count in sorted(company_stats[handler][week].items(), key=lambda x: x[1], reverse=True):
+                    f.write(f"      {company}: {count}\n")
             
             # 在每个对接人的数据后添加分割线，除非是最后一个对接人
             if i < len(stats) - 1:
@@ -29,6 +35,9 @@ stats = defaultdict(lambda: defaultdict(lambda: {'新 / 拍': 0, '套 / 剪': 0,
 
 # 初始化一个嵌套的defaultdict来存储每个对接人每周的项目统计
 project_stats = defaultdict(lambda: defaultdict(lambda: defaultdict(int)))
+
+# 初始化一个嵌套的defaultdict来存储每个对接人每周的公司统计
+company_stats = defaultdict(lambda: defaultdict(lambda: defaultdict(int)))
 
 # 获取output_csv目录下的所有CSV文件
 csv_files = glob.glob(os.path.join('output_csv', '*.csv'))
@@ -42,18 +51,27 @@ for file in csv_files:
         csv_reader = csv.DictReader(f)
         
         for row in csv_reader:
-            # 获取对接人和项目
+            # 获取对接人、项目和公司
             handler = row['对接人']
             project = row['项目']
+            company = row.get('公司', '未知公司')  # 获取公司，如果没有则设为"未知公司"
             
             # 检查进度是否为1
             progress = row.get('进度', '1')
             if progress == '1':
+                task_count = 0  # 用于统计该行的总任务量
+                
                 # 统计各项数据
                 for category in ['新 / 拍', '套 / 剪', '改 / 追', '出差']:
                     value = row.get(category, '0')
                     if value.isdigit():
-                        stats[handler][week][category] += int(value)
+                        count = int(value)
+                        stats[handler][week][category] += count
+                        task_count += count
+                
+                # 将该行的总任务量添加到对应对接人、周数和公司的统计中
+                if task_count > 0:
+                    company_stats[handler][week][company] += task_count
             
             # 无论进度如何，都计入项目统计
             project_stats[handler][week][project] += 1
@@ -63,11 +81,11 @@ excel_filename = sys.argv[1] if len(sys.argv) > 1 else "default"
 
 # 保存统计结果到文本文件
 output_file = f'{excel_filename}_stats_result.txt'
-save_stats_to_file(stats, project_stats, output_file)
+save_stats_to_file(stats, project_stats, company_stats, output_file)
 
 print(f"统计结果已保存到 {output_file}")
 
-# 打印统计结果（可选，如果你还想在控制台看到结果）
+# 打印统计结果
 print("每个对接人每周的统计数据:")
 for handler, weeks_data in stats.items():
     print(f"\n对接人: {handler}")
@@ -78,3 +96,6 @@ for handler, weeks_data in stats.items():
         print("    项目统计:")
         for project, count in project_stats[handler][week].items():
             print(f"      {project}: {count}")
+        print("    公司统计:")
+        for company, count in sorted(company_stats[handler][week].items(), key=lambda x: x[1], reverse=True):
+            print(f"      {company}: {count}")
